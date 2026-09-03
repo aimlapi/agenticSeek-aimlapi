@@ -69,6 +69,7 @@ OPENROUTER_API_KEY='optional'
 TOGETHER_API_KEY='optional'
 GOOGLE_API_KEY='optional'
 ANTHROPIC_API_KEY='optional'
+AIMLAPI_API_KEY='optional'
 ```
 
 
@@ -249,6 +250,7 @@ provider_server_address = # Typically ignored or can be left blank when is_local
 | TogetherAI   | `togetherAI`    | No     | Use various open-source models via TogetherAI API.| [api.together.ai/settings/api-keys](https://api.together.ai/settings/api-keys) |
 | OpenRouter   | `openrouter`    | No     | Use OpenRouter Models| [https://openrouter.ai/](https://openrouter.ai/) |
 | MiniMax      | `minimax`       | No     | Use MiniMax models (e.g., MiniMax-M3, MiniMax-M2.7).| [platform.minimax.io](https://platform.minimax.io/user-center/basic-information) |
+| aimlapi.com  | `aimlapi`       | No     | One API for 350+ chat models from many vendors (e.g. `deepseek/deepseek-v4-flash`, `anthropic/claude-sonnet-4.6`). Model ids are listed at [api.aimlapi.com/v1/models](https://api.aimlapi.com/v1/models). | [aimlapi.com/app/keys](https://aimlapi.com/app/keys) |
 
 *Note:*
 *   We advise against using `gpt-4o` or other OpenAI models for complex web browsing and task planning as current prompt optimizations are geared towards models like Deepseek.

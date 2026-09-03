@@ -14,6 +14,27 @@ from openai import OpenAI
 from sources.logger import Logger
 from sources.utility import pretty_print, animate_thinking
 
+AIMLAPI_DEFAULT_BASE_URL = "https://api.aimlapi.com/v1"
+AIMLAPI_ATTRIBUTION_HEADERS = {
+    "HTTP-Referer": "https://github.com/Fosowl/agenticSeek",
+    "X-Title": "AgenticSeek",
+    "X-AIMLAPI-Partner-ID": "part_agenticseek",
+    "X-AIMLAPI-Source": "agent/agenticseek",
+}
+
+def aimlapi_attribution_headers(base_url: str) -> dict:
+    """
+    Attribution headers identifying AgenticSeek to aimlapi.com.
+
+    Keyed on the request origin, not on the provider name: if AIMLAPI_BASE_URL
+    points somewhere else (a proxy, a self-hosted gateway) we send nothing, so
+    these can never ride a request to a third party. Returns a fresh dict every
+    call so the module level constant is never mutated.
+    """
+    if urlparse(base_url).hostname != "api.aimlapi.com":
+        return {}
+    return dict(AIMLAPI_ATTRIBUTION_HEADERS)
+
 class Provider:
     def __init__(self, provider_name, model, server_address="127.0.0.1:5000", is_local=False):
         self.provider_name = provider_name.lower()
@@ -38,12 +59,13 @@ class Provider:
             "anthropic": self.anthropic_fn,
             "minimax": self.minimax_fn,
             "litellm": self.litellm_fn,
+            "aimlapi": self.aimlapi_fn,
             "test": self.test_fn
         }
         self.logger = Logger("provider.log")
         self.api_key = None
         self.internal_url, self.in_docker = self.get_internal_url()
-        self.unsafe_providers = ["openai", "deepseek", "dsk_deepseek", "together", "google", "openrouter", "anthropic", "minimax"]
+        self.unsafe_providers = ["openai", "deepseek", "dsk_deepseek", "together", "google", "openrouter", "anthropic", "minimax", "aimlapi"]
         if self.provider_name not in self.available_providers:
             raise ValueError(f"Unknown provider: {provider_name}")
         if self.provider_name in self.unsafe_providers and self.is_local == False:
@@ -540,6 +562,43 @@ class Provider:
             return thought
         except Exception as e:
             raise Exception(f"LiteLLM API error: {str(e)}") from e
+
+    def aimlapi_fn(self, history, verbose=False):
+        """
+        Use aimlapi.com (AI/ML API) to generate text through its
+        OpenAI-compatible endpoint.
+
+        Set AIMLAPI_API_KEY in your .env. provider_model is any chat model id
+        listed by https://api.aimlapi.com/v1/models (filter on
+        type == "openai/chat-completions"), e.g. deepseek/deepseek-v4-flash.
+        """
+        if self.is_local:
+            raise Exception("aimlapi.com is not available for local use. Change config.ini")
+        load_dotenv()
+        base_url = os.getenv("AIMLAPI_BASE_URL", AIMLAPI_DEFAULT_BASE_URL)
+
+        client = OpenAI(
+            api_key=self.api_key,
+            base_url=base_url,
+            default_headers=aimlapi_attribution_headers(base_url),
+        )
+        # Optional parameters are omitted, never sent as None: aimlapi.com
+        # rejects an explicit null for temperature/top_p/tools/... with a 400 on
+        # some of its models, and the SDK serialises an unset optional as null.
+        params = {
+            "model": self.model,
+            "messages": history,
+        }
+        try:
+            response = client.chat.completions.create(**params)
+            if response is None:
+                raise Exception("aimlapi.com response is empty.")
+            thought = response.choices[0].message.content
+            if verbose:
+                print(thought)
+            return thought
+        except Exception as e:
+            raise Exception(f"aimlapi.com API error: {str(e)}") from e
 
     def test_fn(self, history, verbose=True):
         """
