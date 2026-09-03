@@ -112,7 +112,7 @@ class TestAimlapiProvider(unittest.TestCase):
         self.assertEqual(headers["HTTP-Referer"], "https://github.com/Fosowl/agenticSeek")
         self.assertEqual(headers["X-Title"], "AgenticSeek")
         self.assertEqual(headers["X-AIMLAPI-Source"], "agent/agenticseek")
-        self.assertEqual(headers["X-AIMLAPI-Partner-ID"], "part_agenticseek")
+        self.assertEqual(headers["X-AIMLAPI-Partner-ID"], "part_l9PWfCWCyHgneiq7GLfDHUsf")
 
     def test_partner_id_matches_gateway_pattern(self):
         """

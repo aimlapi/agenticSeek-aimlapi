@@ -18,7 +18,7 @@ AIMLAPI_DEFAULT_BASE_URL = "https://api.aimlapi.com/v1"
 AIMLAPI_ATTRIBUTION_HEADERS = {
     "HTTP-Referer": "https://github.com/Fosowl/agenticSeek",
     "X-Title": "AgenticSeek",
-    "X-AIMLAPI-Partner-ID": "part_agenticseek",
+    "X-AIMLAPI-Partner-ID": "part_l9PWfCWCyHgneiq7GLfDHUsf",
     "X-AIMLAPI-Source": "agent/agenticseek",
 }
 
