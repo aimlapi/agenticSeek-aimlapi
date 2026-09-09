@@ -69,6 +69,7 @@ OPENROUTER_API_KEY='optional'
 TOGETHER_API_KEY='optional'
 GOOGLE_API_KEY='optional'
 ANTHROPIC_API_KEY='optional'
+AIMLAPI_API_KEY='optional'
 ```
 
 
@@ -242,6 +243,7 @@ provider_server_address = # Typically ignored or can be left blank when is_local
 
 | Provider     | `provider_name` | Local? | Description                                       | API Key Link (Examples)                     |
 |--------------|-----------------|--------|---------------------------------------------------|---------------------------------------------|
+| aimlapi.com  | `aimlapi`       | No     | One API for 350+ chat models from many vendors (e.g. `deepseek/deepseek-v4-flash`, `anthropic/claude-sonnet-4.6`). Model ids are listed at [api.aimlapi.com/v1/models](https://api.aimlapi.com/v1/models). | [aimlapi.com/app/keys](https://aimlapi.com/app/keys) |
 | OpenAI       | `openai`        | No     | Use ChatGPT models via OpenAI's API.              | [platform.openai.com/signup](https://platform.openai.com/signup) |
 | Google Gemini| `google`        | No     | Use Google Gemini models via Google AI Studio.    | [aistudio.google.com/keys](https://aistudio.google.com/keys) |
 | Deepseek     | `deepseek`      | No     | Use Deepseek models via their API.                | [platform.deepseek.com](https://platform.deepseek.com) |
