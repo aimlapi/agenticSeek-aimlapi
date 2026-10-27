@@ -79,6 +79,7 @@ PROVIDER_LABELS = {
     "anthropic": "Anthropic",
     "minimax": "MiniMax",
     "litellm": "LiteLLM",
+    "aimlapi": "AI/ML API",
 }
 
 # Where users create API keys; only providers with a stable, well-known page.
@@ -90,6 +91,7 @@ KEY_PAGES = {
     "deepseek": "https://platform.deepseek.com/api_keys",
     "together": "https://api.together.ai/settings/api-keys",
     "huggingface": "https://huggingface.co/settings/tokens",
+    "aimlapi": "https://aimlapi.com/app/keys",
 }
 
 # Every key issued by these providers starts with this prefix.

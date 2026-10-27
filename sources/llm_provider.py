@@ -14,6 +14,27 @@ from sources.errors import AgenticSeekError, ProviderContext, diagnose_provider_
 from sources.logger import Logger, install_excepthook
 from sources.utility import pretty_print, animate_thinking
 
+AIMLAPI_DEFAULT_BASE_URL = "https://api.aimlapi.com/v1"
+AIMLAPI_ATTRIBUTION_HEADERS = {
+    "HTTP-Referer": "https://github.com/Fosowl/agenticSeek",
+    "X-Title": "AgenticSeek",
+    "X-AIMLAPI-Partner-ID": "part_l9PWfCWCyHgneiq7GLfDHUsf",
+    "X-AIMLAPI-Source": "agent/agenticseek",
+}
+
+def aimlapi_attribution_headers(base_url: str) -> dict:
+    """
+    Attribution headers identifying AgenticSeek to aimlapi.com.
+
+    Keyed on the request origin, not on the provider name: if AIMLAPI_BASE_URL
+    points somewhere else (a proxy, a self-hosted gateway) we send nothing, so
+    these can never ride a request to a third party. Returns a fresh dict every
+    call so the module level constant is never mutated.
+    """
+    if urlparse(base_url).hostname != "api.aimlapi.com":
+        return {}
+    return dict(AIMLAPI_ATTRIBUTION_HEADERS)
+
 class Provider:
     def __init__(self, provider_name, model, server_address="127.0.0.1:5000", is_local=False):
         install_excepthook()  # the provider is built first at startup: show later setup errors as panels
@@ -40,12 +61,13 @@ class Provider:
             "anthropic": self.anthropic_fn,
             "minimax": self.minimax_fn,
             "litellm": self.litellm_fn,
+            "aimlapi": self.aimlapi_fn,
             "test": self.test_fn
         }
         self.logger = Logger("provider.log")
         self.api_key = None
         self.internal_url, self.in_docker = self.get_internal_url()
-        self.unsafe_providers = ["openai", "deepseek", "dsk_deepseek", "together", "google", "openrouter", "trustedrouter", "anthropic", "minimax"]
+        self.unsafe_providers = ["openai", "deepseek", "dsk_deepseek", "together", "google", "openrouter", "trustedrouter", "anthropic", "minimax", "aimlapi"]
         if self.provider_name not in self.available_providers:
             raise AgenticSeekError(
                 "Unknown provider",
@@ -485,6 +507,39 @@ class Provider:
         if api_key:
             call_kwargs["api_key"] = api_key
         response = litellm.completion(**call_kwargs)
+        if response is None:
+            raise provider_error("empty_response", self.error_context())
+        thought = response.choices[0].message.content
+        if verbose:
+            print(thought)
+        return thought
+
+    def aimlapi_fn(self, history, verbose=False):
+        """
+        Use aimlapi.com (AI/ML API) to generate text through its
+        OpenAI-compatible endpoint.
+
+        Set AIMLAPI_API_KEY in your .env. provider_model is any chat model id
+        listed by https://api.aimlapi.com/v1/models (filter on
+        type == "openai/chat-completions"), e.g. deepseek/deepseek-v4-flash.
+        """
+        if self.is_local:
+            raise provider_error("local_unsupported", self.error_context())
+        load_dotenv()
+        base_url = os.getenv("AIMLAPI_BASE_URL", AIMLAPI_DEFAULT_BASE_URL)
+        client = OpenAI(
+            api_key=self.api_key,
+            base_url=base_url,
+            default_headers=aimlapi_attribution_headers(base_url),
+        )
+        # Optional parameters are omitted, never sent as None: aimlapi.com
+        # rejects an explicit null for temperature/top_p/tools/... with a 400 on
+        # some of its models, and the SDK sends an explicit None as null.
+        params = {
+            "model": self.model,
+            "messages": history,
+        }
+        response = client.chat.completions.create(**params)
         if response is None:
             raise provider_error("empty_response", self.error_context())
         thought = response.choices[0].message.content
